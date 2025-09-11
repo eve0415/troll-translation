@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: Apple Live Translation Meme Generator API
+  description: API for generating and sharing Apple-style Live Translation memes
+  version: 1.0.0
+  contact:
+    name: Meme Generator API
+  license:
+    name: MIT
+
+servers:
+  - url: https://troll-translation.pages.dev
+    description: Production Cloudflare Workers
+  - url: http://localhost:3000  
+    description: Local development
+
+paths:
+  /:
+    get:
+      summary: Main meme generator page
+      description: Serves the React SPA with optional meme content from URL parameters
+      parameters:
+        - name: left
+          in: query
+          description: Left side text content
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            example: "Hello"
+        - name: right
+          in: query
+          description: Right side text content  
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+            example: "Bonjour"
+        - name: v
+          in: query
+          description: URL schema version
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: HTML page with meme generator
+          content:
+            text/html:
+              schema:
+                type: string
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/og-image:
+    get:
+      summary: Generate Open Graph image
+      description: Creates PNG image for social media sharing previews
+      parameters:
+        - name: left
+          in: query
+          description: Left side text content
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+        - name: right
+          in: query
+          description: Right side text content
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+        - name: v
+          in: query
+          description: URL schema version
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+      responses:
+        '200':
+          description: Generated PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Cache-Control:
+              description: Caching policy for generated image
+              schema:
+                type: string
+                example: "public, max-age=300"
+            Content-Disposition:
+              description: Filename for download
+              schema:
+                type: string
+                example: "inline; filename=meme.png"
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            Retry-After:
+              description: Seconds until rate limit resets
+              schema:
+                type: integer
+
+  /api/health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "INVALID_PARAMETER"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Text content exceeds maximum length of 100 characters"
+        details:
+          type: object
+          description: Additional error context
+          additionalProperties: true
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-09-11T10:30:00Z"
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+        uptime:
+          type: number
+          description: Uptime in seconds
+          example: 86400
+
+    MemeContent:
+      type: object
+      properties:
+        leftText:
+          type: string
+          maxLength: 100
+          description: Text for left side (black color)
+          example: "Hello"
+        rightText:
+          type: string
+          maxLength: 100
+          description: Text for right side (gradient color)
+          example: "Bonjour"
+        version:
+          type: integer
+          minimum: 1
+          default: 1
+          description: Content schema version
+
+  parameters:
+    LeftText:
+      name: left
+      in: query
+      description: Left side text content
+      required: false
+      schema:
+        type: string
+        maxLength: 100
+
+    RightText:
+      name: right
+      in: query
+      description: Right side text content
+      required: false
+      schema:
+        type: string
+        maxLength: 100
+
+    Version:
+      name: v
+      in: query
+      description: URL schema version
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        Retry-After:
+          description: Seconds until rate limit resets
+          schema:
+            type: integer
+
+security: []
+
+tags:
+  - name: meme
+    description: Meme generation operations
+  - name: sharing
+    description: Social media sharing operations
+  - name: system
+    description: System health and monitoring
