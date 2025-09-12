@@ -1,0 +1,137 @@
+{
+  "$schema": "node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.tanstack",
+      "!**/tanstack-start.d.ts",
+      "!**/routeTree.gen.ts",
+      "!**/worker-configuration.d.ts",
+      "!**/.wrangler",
+      "!**/spec"
+    ]
+  },
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
+  },
+  "formatter": {
+    "lineWidth": 160,
+    "indentStyle": "space",
+    "useEditorconfig": true
+  },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "asNeeded",
+      "jsxQuoteStyle": "single",
+      "quoteStyle": "single"
+    },
+    "linter": {
+      "enabled": true
+    },
+    "assist": {
+      "enabled": true
+    }
+  },
+  "linter": {
+    "domains": {
+      "next": "none",
+      "react": "recommended",
+      "test": "recommended",
+      "solid": "none",
+      "project": "recommended"
+    },
+    "rules": {
+      "complexity": {
+        "noImportantStyles": "off",
+        "noUselessStringConcat": "error",
+        "noVoid": "error",
+        "useSimplifiedLogicExpression": "error",
+        "useWhile": "error"
+      },
+      "correctness": {
+        "noPrivateImports": "error",
+        "noRenderReturnValue": "error",
+        "noUndeclaredVariables": "error",
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error",
+        "useJsonImportAttributes": "error",
+        "useJsxKeyInIterable": "error"
+      },
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error",
+        "noUselessUndefined": "error",
+        "useSortedClasses": {
+          "fix": "safe",
+          "level": "error",
+          "options": { "functions": ["cn"] }
+        }
+      },
+      "style": {
+        "noEnum": "error",
+        "noInferrableTypes": "error",
+        "noParameterAssign": "error",
+        "noSubstr": "error",
+        "noUnusedTemplateLiteral": "error",
+        "noUselessElse": "error",
+        "useAsConstAssertion": "error",
+        "useCollapsedElseIf": "error",
+        "useConsistentArrayType": "error",
+        "useConsistentBuiltinInstantiation": "error",
+        "useConst": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useForOf": "error",
+        "useFragmentSyntax": "error",
+        "useImportType": {
+          "level": "error",
+          "options": {
+            "style": "separatedType"
+          }
+        },
+        "useNodeAssertStrict": "error",
+        "useNumberNamespace": "error",
+        "useReadonlyClassProperties": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "useThrowNewError": "error",
+        "useUnifiedTypeSignatures": "error"
+      },
+      "suspicious": {
+        "noDocumentCookie": "off",
+        "noUnassignedVariables": "error",
+        "noUnknownAtRules": "off",
+        "noUselessEscapeInString": "error"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              { "type": true },
+              ":BLANK_LINE:",
+              ":NODE:",
+              ":BLANK_LINE:",
+              [":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:", "!@discope/**/*"],
+              ":BLANK_LINE:",
+              "@discope/**/*",
+              ":BLANK_LINE:",
+              ":ALIAS:",
+              ":BLANK_LINE:",
+              ":PATH:"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
