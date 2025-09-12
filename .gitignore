@@ -140,3 +140,7 @@ dist
 
 # macOS files
 .DS_Store
+
+# Wrangler files
+.wrangler/
+worker-configuration.d.ts
