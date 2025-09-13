@@ -1,19 +1,16 @@
 {
-	"files": [],
-	"references": [
-		{ "path": "./tsconfig.node.json" },
-		{ "path": "./tsconfig.cloudflare.json" }
-	],
-	"compilerOptions": {
-		"verbatimModuleSyntax": true,
-		"isolatedModules": true,
-		"noUncheckedSideEffectImports": true,
-		"moduleDetection": "force",
-		"skipLibCheck": true,
-		"strict": true,
-		"noEmit": true,
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "bundler"
-	}
+  "files": [],
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "./tsconfig.cloudflare.json" }],
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  }
 }
