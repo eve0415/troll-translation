@@ -307,12 +307,14 @@ export const Route = createFileRoute('/')({
   },
   head: ({ match }) => {
     const og = `/api/ogp?says=${encodeURIComponent(match.search.says ?? '')}&hear=${encodeURIComponent(match.search.hear ?? '')}`;
+    const url = `https://troll-translation.eve0415.workers.dev/?says=${encodeURIComponent(match.search.says ?? '')}&hear=${encodeURIComponent(match.search.hear ?? '')}`;
     return {
       meta: [
         { name: 'title', content: 'Troll Translation' },
         { name: 'description', content: 'Live Translation meme generator' },
         { property: 'og:title', content: 'Troll Translation' },
         { property: 'og:description', content: 'Live Translation meme generator' },
+        { property: 'og:url', content: url },
         { property: 'og:image', content: og },
         { name: 'twitter:title', content: 'Troll Translation' },
         { name: 'twitter:description', content: 'Live Translation meme generator' },
