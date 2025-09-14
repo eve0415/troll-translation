@@ -261,11 +261,18 @@ export const ServerRoute = createServerFileRoute('/api/ogp').methods(_api => ({
       },
     });
     const png = resvg.render().asPng();
+
+    // Only set cache-control in production for easier debugging in dev mode
+    const headers: Record<string, string> = {
+      'Content-Type': 'image/png',
+    };
+
+    if (import.meta.env.PROD) {
+      headers['Cache-Control'] = 'public, max-age=3600';
+    }
+
     return new Response(new Uint8Array(png), {
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'public, max-age=3600',
-      },
+      headers,
     });
   },
 }));
