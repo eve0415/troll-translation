@@ -11,6 +11,7 @@ import { AIRPOD_PNG_BASE64 } from '../../assets/airpodBase64';
 const EARBUD_DATA_HREF = `data:image/png;base64,${AIRPOD_PNG_BASE64}`;
 let wasmInitPromise: Promise<unknown> | null = null;
 let interFontPromise: Promise<Uint8Array | null> | null = null;
+let japaneseFontPromise: Promise<Uint8Array | null> | null = null;
 
 function ensureWasmInitialized() {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
@@ -37,9 +38,41 @@ async function downloadInter(): Promise<Uint8Array | null> {
   return null;
 }
 
+async function downloadJapaneseFont(): Promise<Uint8Array | null> {
+  const candidates = [
+    'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap',
+    'https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/04_NotoSansCJK-TTF.zip'
+  ];
+  // For Google Fonts, we need to get the actual TTF file URL
+  try {
+    // Try Google Fonts API first
+    const googleFontsUrl = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap';
+    const cssRes = await fetch(googleFontsUrl);
+    if (cssRes.ok) {
+      const cssText = await cssRes.text();
+      const ttfMatch = cssText.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.ttf)\)/);
+      if (ttfMatch?.[1]) {
+        return await fetchArrayBuffer(ttfMatch[1]);
+      }
+    }
+  } catch {}
+
+  // Fallback to a known working Noto Sans JP URL
+  try {
+    return await fetchArrayBuffer('https://fonts.gstatic.com/s/notosansjp/v52/nwpBtLy2gfQ9L9mqZ-FRP7JdMZG7FA.ttf');
+  } catch {}
+
+  return null;
+}
+
 async function getInterFont(): Promise<Uint8Array | null> {
   interFontPromise ??= downloadInter();
   return interFontPromise;
+}
+
+async function getJapaneseFont(): Promise<Uint8Array | null> {
+  japaneseFontPromise ??= downloadJapaneseFont();
+  return japaneseFontPromise;
 }
 
 const esc = (s: string) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -49,14 +82,25 @@ const normalizeLines = (text: string) =>
     .replace(/(?:\\|\u00A5)n/gi, '\n')
     .split('\n')
     .slice(0, 3);
+
+// Check if text contains Japanese characters
+const hasJapaneseChars = (text: string) => {
+  // Japanese unicode ranges: Hiragana, Katakana, Kanji (CJK Unified Ideographs)
+  return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(text);
+};
+
 // Rough text width estimation: treat spaces narrower than letters so
 // leading/trailing spaces don't unfairly shrink the font size.
 const approxWidth = (text: string, fs: number) => {
   const s = text || '';
   let sum = 0;
   for (const ch of s) {
+    // Check for Japanese characters first (CJK characters are typically wider)
+    if (/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(ch)) {
+      sum += fs * 1.0; // Full-width for Japanese characters
+    }
     // space and thin punctuation narrower
-    if (ch === ' ') sum += fs * 0.28;
+    else if (ch === ' ') sum += fs * 0.28;
     else if (',.:;!|'.includes(ch)) sum += fs * 0.35;
     else if ('ilI\'"`'.includes(ch)) sum += fs * 0.4;
     else if ('MWmw@#'.includes(ch))
@@ -74,8 +118,12 @@ export const ServerRoute = createServerFileRoute('/api/ogp').methods(_api => ({
     const says = url.searchParams.get('says') ?? 'Hola';
     const hear = url.searchParams.get('hear') ?? 'Hello';
 
-    // Try to download Inter font, but don't rely on it exclusively
+    // Try to download Inter font and Japanese font, but don't rely on them exclusively
     const interFont = await getInterFont();
+    const japaneseFont = await getJapaneseFont();
+
+    // Check if we need Japanese font support
+    const needsJapanese = hasJapaneseChars(says) || hasJapaneseChars(hear);
 
     // Match page preview layout
     const centerX = WIDTH / 2;
@@ -121,9 +169,15 @@ export const ServerRoute = createServerFileRoute('/api/ogp').methods(_api => ({
     const leftStartY = centerY - ((Math.max(1, leftLines.length) - 1) * leftLH) / 2;
     const rightStartY = centerY - ((Math.max(1, rightLines.length) - 1) * rightLH) / 2;
 
-    // Use a more robust font fallback chain for SVG
-    const fontFallback = "system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
-    const fontFamily = interFont ? `Inter, ${fontFallback}` : fontFallback;
+    // Use a more robust font fallback chain for SVG, including Japanese support
+    const fontFallback = "system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Arial, 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif";
+    let fontFamily = fontFallback;
+
+    if (needsJapanese && japaneseFont) {
+      fontFamily = `'Noto Sans JP', ${fontFamily}`;
+    } else if (interFont) {
+      fontFamily = `Inter, ${fontFamily}`;
+    }
 
     const leftTexts = (leftLines.length ? leftLines : [''])
       .map(
@@ -140,13 +194,18 @@ export const ServerRoute = createServerFileRoute('/api/ogp').methods(_api => ({
 
     const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">\n  <defs>\n    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">\n      <stop offset="0%" stop-color="#0E4BFF" />\n      <stop offset="55%" stop-color="#7C3AED" />\n      <stop offset="100%" stop-color="#FF2D55" />\n    </linearGradient>\n  </defs>\n  <rect width="100%" height="100%" fill="#ffffff"/>\n  <image href="${EARBUD_DATA_HREF}" x="${earbudX}" y="${earbudY}" width="${earbudSize}" height="${earbudSize}"/>\n  ${leftTexts}\n  ${rightTexts}\n</svg>`;
 
+    // Prepare font buffers
+    const fontBuffers = [];
+    if (interFont) fontBuffers.push(interFont);
+    if (japaneseFont) fontBuffers.push(japaneseFont);
+
     const resvg = new Resvg(svg, {
       background: 'white',
       fitTo: { mode: 'original' },
       font: {
-        ...(interFont ? { fontBuffers: [interFont] } : {}),
-        defaultFontFamily: interFont ? 'Inter' : 'system-ui',
-        sansSerifFamily: interFont ? 'Inter' : 'system-ui',
+        ...(fontBuffers.length > 0 ? { fontBuffers } : {}),
+        defaultFontFamily: needsJapanese && japaneseFont ? 'Noto Sans JP' : (interFont ? 'Inter' : 'system-ui'),
+        sansSerifFamily: needsJapanese && japaneseFont ? 'Noto Sans JP' : (interFont ? 'Inter' : 'system-ui'),
         serifFamily: 'serif',
         monospaceFamily: 'monospace',
         loadSystemFonts: true,
