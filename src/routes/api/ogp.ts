@@ -39,10 +39,6 @@ async function downloadInter(): Promise<Uint8Array | null> {
 }
 
 async function downloadJapaneseFont(): Promise<Uint8Array | null> {
-  const candidates = [
-    'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600&display=swap',
-    'https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/04_NotoSansCJK-TTF.zip'
-  ];
   // For Google Fonts, we need to get the actual TTF file URL
   try {
     // Try Google Fonts API first
@@ -50,7 +46,7 @@ async function downloadJapaneseFont(): Promise<Uint8Array | null> {
     const cssRes = await fetch(googleFontsUrl);
     if (cssRes.ok) {
       const cssText = await cssRes.text();
-      const ttfMatch = cssText.match(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.ttf)\)/);
+      const ttfMatch = /url\((https:\/\/fonts\.gstatic\.com\/[^)]+\.ttf)\)/.exec(cssText);
       if (ttfMatch?.[1]) {
         return await fetchArrayBuffer(ttfMatch[1]);
       }
@@ -76,12 +72,54 @@ async function getJapaneseFont(): Promise<Uint8Array | null> {
 }
 
 const esc = (s: string) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const normalizeLines = (text: string) =>
-  (text || '')
-    .replace(/\r\n?/g, '\n')
-    .replace(/(?:\\|\u00A5)n/gi, '\n')
-    .split('\n')
-    .slice(0, 3);
+// Wrap long text automatically, but respect explicit line breaks
+const wrapText = (text: string, maxWidth: number, fontSize: number): string[] => {
+  if (!text) return [''];
+
+  // First normalize line endings and explicit breaks
+  const normalizedText = text.replace(/\r\n?/g, '\n').replace(/(?:\\|\u00A5)n/gi, '\n');
+
+  const paragraphs = normalizedText.split('\n');
+  const wrappedLines: string[] = [];
+
+  for (const paragraph of paragraphs) {
+    if (!paragraph.trim()) {
+      wrappedLines.push('');
+      continue;
+    }
+
+    // If paragraph fits within maxWidth, keep it as is
+    if (approxWidth(paragraph, fontSize) <= maxWidth) {
+      wrappedLines.push(paragraph);
+      continue;
+    }
+
+    // Otherwise, wrap the paragraph
+    const words = paragraph.split(' ').filter(w => w.length > 0); // Simple word split
+    let currentLine = '';
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+      if (approxWidth(testLine, fontSize) <= maxWidth) {
+        currentLine = testLine;
+      } else if (currentLine) {
+        wrappedLines.push(currentLine);
+        currentLine = word;
+      } else {
+        // Single word too long, just add it anyway
+        wrappedLines.push(word);
+      }
+    }
+
+    if (currentLine) {
+      wrappedLines.push(currentLine);
+    }
+  }
+
+  return wrappedLines; // Don't limit lines here, let font fitting decide
+};
+
 
 // Check if text contains Japanese characters
 const hasJapaneseChars = (text: string) => {
@@ -138,32 +176,43 @@ export const ServerRoute = createServerFileRoute('/api/ogp').methods(_api => ({
     const leftAvail = Math.max(80, leftStopX - laneMargin);
     const rightAvail = Math.max(80, WIDTH - rightStartX - laneMargin);
 
-    // Dynamic font sizing
-    const baseFont = Math.round(WIDTH * 0.21); // 2× larger (~252 at 1200px)
-    const minFont = 12;
+    // Dynamic font sizing with text wrapping
+    const baseFont = Math.min(120, Math.round(WIDTH * 0.1)); // More reasonable max size (~120px at 1200px)
+    const minFont = 24;
     const lineHeight = (fs: number) => fs * 1.15;
-    const fitFontForLines = (lines: string[], maxWidth: number, maxHeight: number) => {
-      let lo = minFont;
-      let hi = baseFont;
-      const fits = (fs: number) => {
-        const longest = Math.max(1, ...lines.map(l => approxWidth(l, fs)));
-        const totalH = lineHeight(fs) * Math.max(1, lines.length);
-        return longest <= maxWidth && totalH <= maxHeight;
-      };
-      if (fits(hi)) return hi;
-      while (lo < hi) {
-        const mid = Math.floor((lo + hi) / 2);
-        if (fits(mid)) lo = mid + 1;
-        else hi = mid;
+
+    const fitFontAndWrap = (text: string, maxWidth: number, maxHeight: number) => {
+      if (!text.trim()) return { fontSize: baseFont, lines: [''] };
+
+      // Try font sizes from large to small
+      for (let fs = baseFont; fs >= minFont; fs -= 2) {
+        const lines = wrapText(text, maxWidth, fs);
+
+        // Check if all constraints are met
+        const fits = lines.every(line => approxWidth(line, fs) <= maxWidth);
+        const totalHeight = lineHeight(fs) * lines.length;
+        const heightFits = totalHeight <= maxHeight;
+
+        if (fits && heightFits) {
+          return { fontSize: fs, lines };
+        }
       }
-      return Math.max(minFont, lo - 1);
+
+      // Fallback: use minimum font size and truncate to fit height
+      const fallbackLines = wrapText(text, maxWidth, minFont);
+      const maxLinesForHeight = Math.floor(maxHeight / lineHeight(minFont));
+      const truncatedLines = fallbackLines.slice(0, Math.max(1, maxLinesForHeight));
+      return { fontSize: minFont, lines: truncatedLines };
     };
 
-    const leftLines = normalizeLines(says);
-    const rightLines = normalizeLines(hear);
     const maxLaneHeight = HEIGHT * 0.8;
-    const leftFs = fitFontForLines(leftLines.length ? leftLines : [''], leftAvail, maxLaneHeight);
-    const rightFs = fitFontForLines(rightLines.length ? rightLines : [''], rightAvail, maxLaneHeight);
+    const leftResult = fitFontAndWrap(says || '', leftAvail, maxLaneHeight);
+    const rightResult = fitFontAndWrap(hear || '', rightAvail, maxLaneHeight);
+
+    const leftLines = leftResult.lines;
+    const rightLines = rightResult.lines;
+    const leftFs = leftResult.fontSize;
+    const rightFs = rightResult.fontSize;
     const leftLH = lineHeight(leftFs);
     const rightLH = lineHeight(rightFs);
     const leftStartY = centerY - ((Math.max(1, leftLines.length) - 1) * leftLH) / 2;
@@ -204,8 +253,8 @@ export const ServerRoute = createServerFileRoute('/api/ogp').methods(_api => ({
       fitTo: { mode: 'original' },
       font: {
         ...(fontBuffers.length > 0 ? { fontBuffers } : {}),
-        defaultFontFamily: needsJapanese && japaneseFont ? 'Noto Sans JP' : (interFont ? 'Inter' : 'system-ui'),
-        sansSerifFamily: needsJapanese && japaneseFont ? 'Noto Sans JP' : (interFont ? 'Inter' : 'system-ui'),
+        defaultFontFamily: needsJapanese && japaneseFont ? 'Noto Sans JP' : interFont ? 'Inter' : 'system-ui',
+        sansSerifFamily: needsJapanese && japaneseFont ? 'Noto Sans JP' : interFont ? 'Inter' : 'system-ui',
         serifFamily: 'serif',
         monospaceFamily: 'monospace',
         loadSystemFonts: true,
