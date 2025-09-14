@@ -175,13 +175,7 @@ export interface MemeGeneratorError extends Error {
   recoverable: boolean;
 }
 
-export type MemeGeneratorErrorCode =
-  | 'CANVAS_RENDER_FAILED'
-  | 'FONT_LOAD_FAILED'
-  | 'INVALID_CONTENT'
-  | 'DOWNLOAD_FAILED'
-  | 'SHARE_FAILED'
-  | 'URL_PARSE_FAILED';
+export type MemeGeneratorErrorCode = 'CANVAS_RENDER_FAILED' | 'FONT_LOAD_FAILED' | 'INVALID_CONTENT' | 'DOWNLOAD_FAILED' | 'SHARE_FAILED' | 'URL_PARSE_FAILED';
 
 // =============================================================================
 // Event Contracts
@@ -256,7 +250,7 @@ export const DEFAULT_IMAGE_CONFIG: ImageConfig = {
   leftTextColor: '#000000',
   rightTextGradient: {
     startColor: '#8B5CF6',
-    middleColor: '#EC4899', 
+    middleColor: '#EC4899',
     endColor: '#EF4444',
     direction: 'horizontal',
   },

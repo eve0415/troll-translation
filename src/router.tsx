@@ -11,6 +11,7 @@ export function createRouter() {
   return createTanStackRouter({
     routeTree,
     scrollRestoration: true,
+    getScrollRestorationKey: location => location.pathname,
   });
 }
 

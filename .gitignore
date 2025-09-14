@@ -144,3 +144,12 @@ dist
 # Wrangler files
 .wrangler/
 worker-configuration.d.ts
+
+# tanstack
+.tanstack
+
+# claude
+.claude/settings.local.json
+
+# playwright
+.playwright-mcp/

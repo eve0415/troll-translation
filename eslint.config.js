@@ -37,8 +37,8 @@ export default defineConfig(
       reactPlugin.configs.flat.recommended,
       reactPlugin.configs.flat['jsx-runtime'],
       // @ts-expect-error
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      ...reactHooksPlugin.configs['recommended-latest'],
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      reactHooksPlugin.configs['recommended-latest'],
     ],
   },
   {
