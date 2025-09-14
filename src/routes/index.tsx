@@ -306,7 +306,7 @@ export const Route = createFileRoute('/')({
     return search;
   },
   head: ({ match }) => {
-    const og = `/api/ogp?says=${encodeURIComponent(match.search.says ?? '')}&hear=${encodeURIComponent(match.search.hear ?? '')}`;
+    const og = `https://troll-translation.eve0415.workers.dev/api/ogp?says=${encodeURIComponent(match.search.says ?? '')}&hear=${encodeURIComponent(match.search.hear ?? '')}`;
     const url = `https://troll-translation.eve0415.workers.dev/?says=${encodeURIComponent(match.search.says ?? '')}&hear=${encodeURIComponent(match.search.hear ?? '')}`;
     return {
       meta: [
@@ -316,10 +316,13 @@ export const Route = createFileRoute('/')({
         { property: 'og:description', content: 'Live Translation meme generator' },
         { property: 'og:url', content: url },
         { property: 'og:image', content: og },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
         { name: 'twitter:title', content: 'Troll Translation' },
         { name: 'twitter:description', content: 'Live Translation meme generator' },
         { name: 'twitter:image', content: og },
         { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:creator', content: '@eveevekun' },
       ],
     };
   },

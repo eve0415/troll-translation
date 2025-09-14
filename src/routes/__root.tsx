@@ -17,7 +17,7 @@ const RootComponent: FC = () => {
 
 const RootLayout: FC<PropsWithChildren> = ({ children }) => {
   return (
-    <html lang='en'>
+    <html lang='en' prefix='og: https://ogp.me/ns#'>
       <head>
         <HeadContent />
       </head>
