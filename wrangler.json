@@ -4,12 +4,13 @@
   "compatibility_date": "2025-09-06",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "preview_urls": true,
   "upload_source_maps": true,
   "placement": {
     "mode": "smart"
   },
 
-  "main": "./dist/server/server.js",
+  "main": "@tanstack/react-start/server-entry",
   "assets": {
     "directory": "./dist/client"
   },

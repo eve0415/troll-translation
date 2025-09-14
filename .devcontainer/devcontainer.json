@@ -76,7 +76,8 @@
           "**/routeTree.gen.ts": true,
           "**/.tanstack": true,
           "**/tanstack-start.d.ts": true,
-          "**/tsconfig.*.tsbuildinfo": true
+          "**/tsconfig.*.tsbuildinfo": true,
+          "**/dist": true
         },
         "javascript.updateImportsOnPaste.enabled": true,
         "search.exclude": {
@@ -87,7 +88,8 @@
           "**/routeTree.gen.ts": true,
           "**/.tanstack": true,
           "**/tanstack-start.d.ts": true,
-          "**/tsconfig.*.tsbuildinfo": true
+          "**/tsconfig.*.tsbuildinfo": true,
+          "**/dist": true
         },
         "tailwindCSS.classAttributes": ["className", ".*Styles"],
         "tailwindCSS.experimental.classRegex": [

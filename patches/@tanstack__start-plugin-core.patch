@@ -1,0 +1,14 @@
+diff --git a/dist/esm/plugin.js b/dist/esm/plugin.js
+index 3671e5512876c4d8f7a5051574f45b259dea48b8..2b18b3055786b40ed7bd84b348a678b91eca0608 100644
+--- a/dist/esm/plugin.js
++++ b/dist/esm/plugin.js
+@@ -123,6 +123,9 @@ function TanStackStartVitePluginCore(corePluginOpts, startPluginOpts) {
+                   include: [/node_modules/]
+                 },
+                 copyPublicDir: viteConfig.environments?.[VITE_ENVIRONMENT_NAMES.server]?.build?.copyPublicDir ?? false
++              },
++              optimizeDeps: {
++                entries: [vite.normalizePath(routerFilePath)]
+               }
+             }
+           },

@@ -1,7 +1,7 @@
 import { initWasm, Resvg } from '@resvg/resvg-wasm';
 // WASM bytes provided by Vite at build time, decoded at runtime
 // @ts-expect-error
-import wasmBytes from '@resvg/resvg-wasm/index_bg.wasm?wasm64';
+import wasmBytes from '@resvg/resvg-wasm/index_bg.wasm';
 import { createServerFileRoute } from '@tanstack/react-start/server';
 
 // Inline the earbud image, too, so the renderer never needs external fetches.

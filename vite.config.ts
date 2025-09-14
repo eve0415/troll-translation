@@ -56,12 +56,18 @@ export default defineConfig({
         plugins: ['babel-plugin-react-compiler'],
       },
     }),
-    cloudflare(),
+    cloudflare({ viteEnvironment: { name: 'ssr' } }),
     devtoolsJson(),
     browserEcho({
       injectHtml: false,
       stackMode: 'condensed',
     }),
   ],
-  build: { cssMinify: 'lightningcss', minify: true },
+  build: {
+    cssMinify: 'lightningcss',
+    minify: true,
+    rolldownOptions: {
+      external: ['solid-js/web'],
+    },
+  },
 });

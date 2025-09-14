@@ -8,7 +8,7 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig(
   {
-    ignores: ['specs', '.tanstack', 'src/routeTree.gen.ts', 'tanstack-start.d.ts', 'worker-configuration.d.ts', '.wrangler'],
+    ignores: ['specs', '.tanstack', 'src/routeTree.gen.ts', 'tanstack-start.d.ts', 'worker-configuration.d.ts', '.wrangler', 'dist'],
   },
   ...tseslint.configs.recommendedTypeCheckedOnly,
   ...tseslint.configs.stylisticTypeChecked,

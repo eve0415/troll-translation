@@ -10,7 +10,8 @@
       "!**/routeTree.gen.ts",
       "!**/worker-configuration.d.ts",
       "!**/.wrangler",
-      "!**/spec"
+      "!**/spec",
+      "!**/dist"
     ]
   },
   "vcs": {
