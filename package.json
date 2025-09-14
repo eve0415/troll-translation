@@ -6,7 +6,8 @@
     "dev": "pnpm vite dev --host",
     "build": "vite build",
     "lint": "eslint --cache --fix . && biome check --write --unsafe",
-    "generate": "wrangler types"
+    "generate": "wrangler types",
+    "release": "wrangler deploy"
   },
   "engines": {
     "node": ">=22.19 <23"
