@@ -1,8 +1,9 @@
 import type { FC, PropsWithChildren } from 'react';
 
-import { TanStackDevtools } from '@tanstack/react-devtools';
+// import { TanStackDevtools } from '@tanstack/react-devtools';
 import { createRootRoute, HeadContent, Outlet, Scripts } from '@tanstack/react-router';
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
+
+// import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 
 import rootCss from './__root.css?url';
 
@@ -23,7 +24,7 @@ const RootLayout: FC<PropsWithChildren> = ({ children }) => {
       <body>
         <main>{children}</main>
 
-        {import.meta.env.DEV && (
+        {/* {import.meta.env.DEV && (
           <TanStackDevtools
             plugins={[
               {
@@ -32,7 +33,7 @@ const RootLayout: FC<PropsWithChildren> = ({ children }) => {
               },
             ]}
           />
-        )}
+        )} */}
 
         <Scripts />
       </body>
